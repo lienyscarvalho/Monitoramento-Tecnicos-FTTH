@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTTH Field Monitor - Sistema de Monitoramento</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --dark-lighter: #1e293b;
+            --dark-border: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --bg-card: #1e293b;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #root {
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--dark-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(139, 92, 246, 0.15));
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 32px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--dark-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--dark-lighter);
+            border-color: var(--primary);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.2);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Map */
+        .map-container {
+            height: 500px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .map-placeholder svg {
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Technicians List */
+        .tech-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tech-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tech-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tech-list::-webkit-scrollbar-thumb {
+            background: var(--dark-border);
+            border-radius: 3px;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--dark-border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tech-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .tech-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .tech-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tech-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-badge.available {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.busy {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .status-badge.offline {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-badge.available .status-dot {
+            background: var(--success);
+        }
+
+        .status-badge.busy .status-dot {
+            background: var(--warning);
+        }
+
+        .status-badge.offline .status-dot {
+            background: var(--text-muted);
+        }
+
+        /* Service Orders */
+        .os-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .os-item {
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--dark-border);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .os-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .os-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .os-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .os-type {
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--secondary);
+        }
+
+        .os-info {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .os-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .os-tech {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+        }
+
+        .os-time {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--dark-border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { 
+            Activity, Users, MapPin, Clock, TrendingUp, TrendingDown,
+            Radio, CheckCircle, AlertCircle, Navigation, Settings, BarChart3
+        } = lucide;
+
+        // Mock Data
+        const initialTechnicians = [
+            { id: 1, name: "Carlos Silva", status: "busy", location: "Zona Norte", currentOS: "OS-2451", avatar: "CS" },
+            { id: 2, name: "Maria Santos", status: "available", location: "Centro", currentOS: null, avatar: "MS" },
+            { id: 3, name: "João Pedro", status: "busy", location: "Zona Sul", currentOS: "OS-2453", avatar: "JP" },
+            { id: 4, name: "Ana Costa", status: "available", location: "Zona Oeste", currentOS: null, avatar: "AC" },
+            { id: 5, name: "Roberto Lima", status: "busy", location: "Zona Leste", currentOS: "OS-2455", avatar: "RL" },
+            { id: 6, name: "Paula Mendes", status: "offline", location: "Base", currentOS: null, avatar: "PM" }
+        ];
+
+        const serviceOrders = [
+            { id: "OS-2451", type: "Instalação", address: "Rua das Flores, 123", tech: "Carlos Silva", time: "1h 30min", status: "em_andamento" },
+            { id: "OS-2452", type: "Manutenção", address: "Av. Principal, 456", tech: "Não atribuído", time: "Pendente", status: "pendente" },
+            { id: "OS-2453", type: "Instalação", address: "Rua do Sol, 789", tech: "João Pedro", time: "45min", status: "em_andamento" },
+            { id: "OS-2454", type: "Reparo", address: "Praça Central, 321", tech: "Não atribuído", time: "Pendente", status: "pendente" },
+            { id: "OS-2455", type: "Instalação", address: "Rua Nova, 654", tech: "Roberto Lima", time: "2h 15min", status: "em_andamento" }
+        ];
+
+        function App() {
+            const [activeView, setActiveView] = useState('dashboard');
+            const [technicians, setTechnicians] = useState(initialTechnicians);
+            const [filterStatus, setFilterStatus] = useState('all');
+
+            const stats = {
+                total: technicians.length,
+                active: technicians.filter(t => t.status === 'busy').length,
+                available: technicians.filter(t => t.status === 'available').length,
+                orders: serviceOrders.length
+            };
+
+            const filteredTechs = filterStatus === 'all' 
+                ? technicians 
+                : technicians.filter(t => t.status === filterStatus);
+
+            const getStatusInfo = (status) => {
+                const statusMap = {
+                    available: { label: 'Disponível', class: 'available', icon: CheckCircle },
+                    busy: { label: 'Em Atendimento', class: 'busy', icon: Activity },
+                    offline: { label: 'Offline', class: 'offline', icon: AlertCircle }
+                };
+                return statusMap[status] || statusMap.offline;
+            };
+
+            return (
+                <div className="app-container">
+                    {/* Sidebar */}
+                    <div className="sidebar">
+                        <div className="logo">
+                            <div className="logo-icon">
+                                <Radio size={24} />
+                            </div>
+                            <div className="logo-text">FTTH Monitor</div>
+                        </div>
+
+                        <nav className="nav-menu">
+                            <div 
+                                className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => setActiveView('dashboard')}
+                            >
+                                <BarChart3 size={20} />
+                                Dashboard
+                            </div>
+                            <div 
+                                className={`nav-item ${activeView === 'map' ? 'active' : ''}`}
+                                onClick={() => setActiveView('map')}
+                            >
+                                <MapPin size={20} />
+                                Mapa em Tempo Real
+                            </div>
+                            <div 
+                                className={`nav-item ${activeView === 'technicians' ? 'active' : ''}`}
+                                onClick={() => setActiveView('technicians')}
+                            >
+                                <Users size={20} />
+                                Técnicos
+                            </div>
+                            <div 
+                                className={`nav-item ${activeView === 'orders' ? 'active' : ''}`}
+                                onClick={() => setActiveView('orders')}
+                            >
+                                <Activity size={20} />
+                                Ordens de Serviço
+                            </div>
+                            <div 
+                                className={`nav-item ${activeView === 'settings' ? 'active' : ''}`}
+                                onClick={() => setActiveView('settings')}
+                            >
+                                <Settings size={20} />
+                                Configurações
+                            </div>
+                        </nav>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="main-content">
+                        <div className="header">
+                            <h1 className="header-title">Dashboard de Monitoramento</h1>
+                            <div className="header-actions">
+                                <button className="btn btn-secondary">
+                                    <Clock size={18} />
+                                    Histórico
+                                </button>
+                                <button className="btn btn-primary">
+                                    <Activity size={18} />
+                                    Nova OS
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Stats Cards */}
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{stats.total}</div>
+                                        <div className="stat-label">Total de Técnicos</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(14, 165, 233, 0.15)', color: 'var(--primary)'}}>
+                                        <Users size={24} />
+                                    </div>
+                                </div>
+                                <div className="stat-change positive">
+                                    <TrendingUp size={14} />
+                                    +2 este mês
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{stats.active}</div>
+                                        <div className="stat-label">Em Atendimento</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)'}}>
+                                        <Activity size={24} />
+                                    </div>
+                                </div>
+                                <div className="stat-change positive">
+                                    <TrendingUp size={14} />
+                                    +12% hoje
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{stats.available}</div>
+                                        <div className="stat-label">Disponíveis</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)'}}>
+                                        <CheckCircle size={24} />
+                                    </div>
+                                </div>
+                                <div className="stat-change negative">
+                                    <TrendingDown size={14} />
+                                    -1 vs ontem
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{stats.orders}</div>
+                                        <div className="stat-label">OS Abertas</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(139, 92, 246, 0.15)', color: 'var(--secondary)'}}>
+                                        <Navigation size={24} />
+                                    </div>
+                                </div>
+                                <div className="stat-change positive">
+                                    <TrendingUp size={14} />
+                                    3 novas hoje
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content Grid */}
+                        <div className="content-grid">
+                            {/* Map */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Mapa de Localização</h2>
+                                    <button className="btn btn-secondary" style={{padding: '8px 16px', fontSize: '14px'}}>
+                                        <MapPin size={16} />
+                                        Tela Cheia
+                                    </button>
+                                </div>
+                                <div className="map-container">
+                                    <div className="map-placeholder">
+                                        <MapPin size={64} />
+                                        <div style={{fontSize: '18px', fontWeight: 600, marginBottom: '8px'}}>
+                                            Mapa de Localização em Tempo Real
+                                        </div>
+                                        <div style={{fontSize: '14px'}}>
+                                            Integração com GPS para rastreamento dos técnicos
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Technicians */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Técnicos em Campo</h2>
+                                </div>
+                                
+                                <div className="filters">
+                                    <button 
+                                        className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus('all')}
+                                    >
+                                        Todos
+                                    </button>
+                                    <button 
+                                        className={`filter-btn ${filterStatus === 'available' ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus('available')}
+                                    >
+                                        Disponíveis
+                                    </button>
+                                    <button 
+                                        className={`filter-btn ${filterStatus === 'busy' ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus('busy')}
+                                    >
+                                        Ocupados
+                                    </button>
+                                </div>
+
+                                <div className="tech-list">
+                                    {filteredTechs.map(tech => {
+                                        const statusInfo = getStatusInfo(tech.status);
+                                        const StatusIcon = statusInfo.icon;
+                                        
+                                        return (
+                                            <div key={tech.id} className="tech-item">
+                                                <div className="tech-avatar">{tech.avatar}</div>
+                                                <div className="tech-info">
+                                                    <div className="tech-name">{tech.name}</div>
+                                                    <div className="tech-status">
+                                                        <MapPin size={14} />
+                                                        {tech.location}
+                                                        {tech.currentOS && ` • ${tech.currentOS}`}
+                                                    </div>
+                                                </div>
+                                                <div className={`status-badge ${statusInfo.class}`}>
+                                                    <span className="status-dot"></span>
+                                                    {statusInfo.label}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Service Orders */}
+                        <div className="card" style={{marginTop: '24px'}}>
+                            <div className="card-header">
+                                <h2 className="card-title">Ordens de Serviço Recentes</h2>
+                                <button className="btn btn-secondary" style={{padding: '8px 16px', fontSize: '14px'}}>
+                                    Ver Todas
+                                </button>
+                            </div>
+                            <div className="os-list">
+                                {serviceOrders.map(os => (
+                                    <div key={os.id} className="os-item">
+                                        <div className="os-header">
+                                            <span className="os-id">{os.id}</span>
+                                            <span className="os-type">{os.type}</span>
+                                        </div>
+                                        <div className="os-info">
+                                            <MapPin size={14} style={{display: 'inline', marginRight: '6px'}} />
+                                            {os.address}
+                                        </div>
+                                        <div className="os-footer">
+                                            <div className="os-tech">
+                                                <Users size={14} />
+                                                {os.tech}
+                                            </div>
+                                            <div className="os-time">
+                                                <Clock size={14} style={{display: 'inline', marginRight: '4px'}} />
+                                                {os.time}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

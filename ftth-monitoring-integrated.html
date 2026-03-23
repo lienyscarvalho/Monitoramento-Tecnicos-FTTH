@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTTH Monitor - Dashboard Integrado</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --dark-lighter: #1e293b;
+            --dark-border: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --bg-card: #1e293b;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #root {
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--dark-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(139, 92, 246, 0.15));
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .user-info {
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--dark-border);
+            margin-top: auto;
+        }
+
+        .user-info-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 32px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text);
+            border: 1px solid var(--dark-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--dark-lighter);
+            border-color: var(--primary);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.2);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Map */
+        .map-container {
+            height: 500px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        /* Technicians List */
+        .tech-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tech-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tech-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tech-list::-webkit-scrollbar-thumb {
+            background: var(--dark-border);
+            border-radius: 3px;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--dark-border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tech-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .tech-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .tech-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tech-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-badge.available {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.busy {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .status-badge.offline {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-badge.available .status-dot {
+            background: var(--success);
+        }
+
+        .status-badge.busy .status-dot {
+            background: var(--warning);
+        }
+
+        .status-badge.offline .status-dot {
+            background: var(--text-muted);
+        }
+
+        /* Service Orders */
+        .os-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .os-item {
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--dark-border);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .os-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .os-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .os-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .os-type {
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--secondary);
+        }
+
+        .os-info {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .os-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .os-tech {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+        }
+
+        .os-time {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--dark-border);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 3px solid var(--dark-border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--dark-border);
+            background: var(--dark);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { 
+            Activity, Users, MapPin, Clock, TrendingUp, TrendingDown,
+            Radio, CheckCircle, AlertCircle, Navigation, Settings, BarChart3,
+            LogOut, Plus, RefreshCw, X
+        } = lucide;
+
+        // Configuração da API
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : '/api';
+
+        // Função para fazer requisições autenticadas
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            const url = `${API_URL}${endpoint}`;
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers
+            };
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+
+                const data = await response.json();
+                return { response, data };
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                throw error;
+            }
+        }
+
+        // Toast notification component
+        function Toast({ message, type, onClose }) {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            return (
+                <div className={`toast ${type}`}>
+                    {message}
+                </div>
+            );
+        }
+
+        function App() {
+            const [activeView, setActiveView] = useState('dashboard');
+            const [technicians, setTechnicians] = useState([]);
+            const [serviceOrders, setServiceOrders] = useState([]);
+            const [stats, setStats] = useState(null);
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [loading, setLoading] = useState(true);
+            const [showModal, setShowModal] = useState(false);
+            const [modalType, setModalType] = useState('');
+            const [toast, setToast] = useState(null);
+            const [user, setUser] = useState(null);
+            const [refreshing, setRefreshing] = useState(false);
+
+            useEffect(() => {
+                // Verificar se está autenticado
+                const token = localStorage.getItem('token');
+                const userData = localStorage.getItem('user');
+                
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                if (userData) {
+                    setUser(JSON.parse(userData));
+                }
+
+                loadData();
+            }, []);
+
+            async function loadData() {
+                setLoading(true);
+                try {
+                    await Promise.all([
+                        loadTechnicians(),
+                        loadServiceOrders(),
+                        loadStats()
+                    ]);
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    showToast('Erro ao carregar dados', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            async function loadTechnicians() {
+                const result = await apiRequest('/technicians');
+                if (result && result.data) {
+                    setTechnicians(result.data);
+                }
+            }
+
+            async function loadServiceOrders() {
+                const result = await apiRequest('/service-orders');
+                if (result && result.data) {
+                    setServiceOrders(result.data);
+                }
+            }
+
+            async function loadStats() {
+                const result = await apiRequest('/dashboard/stats');
+                if (result && result.data) {
+                    setStats(result.data);
+                }
+            }
+
+            async function handleRefresh() {
+                setRefreshing(true);
+                await loadData();
+                setRefreshing(false);
+                showToast('Dados atualizados!', 'success');
+            }
+
+            function handleLogout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+
+            function showToast(message, type = 'success') {
+                setToast({ message, type });
+                setTimeout(() => setToast(null), 3000);
+            }
+
+            function openModal(type) {
+                setModalType(type);
+                setShowModal(true);
+            }
+
+            function closeModal() {
+                setShowModal(false);
+                setModalType('');
+            }
+
+            const filteredTechs = filterStatus === 'all' 
+                ? technicians 
+                : technicians.filter(t => t.status === filterStatus);
+
+            const getStatusInfo = (status) => {
+                const statusMap = {
+                    available: { label: 'Disponível', class: 'available', icon: CheckCircle },
+                    busy: { label: 'Em Atendimento', class: 'busy', icon: Activity },
+                    offline: { label: 'Offline', class: 'offline', icon: AlertCircle }
+                };
+                return statusMap[status] || statusMap.offline;
+            };
+
+            const getTypeLabel = (type) => {
+                const types = {
+                    installation: 'Instalação',
+                    maintenance: 'Manutenção',
+                    repair: 'Reparo'
+                };
+                return types[type] || type;
+            };
+
+            if (loading) {
+                return (
+                    <div className="loading">
+                        <div className="spinner"></div>
+                        <div>Carregando dados...</div>
+                    </div>
+                );
+            }
+
+            const statsData = stats ? {
+                total: stats.technicians?.total || 0,
+                active: stats.technicians?.byStatus?.find(s => s.status === 'busy')?.count || 0,
+                available: stats.technicians?.byStatus?.find(s => s.status === 'available')?.count || 0,
+                orders: stats.serviceOrders?.total || 0
+            } : { total: 0, active: 0, available: 0, orders: 0 };
+
+            return (
+                <div className="app-container">
+                    {/* Sidebar */}
+                    <div className="sidebar">
+                        <div className="logo">
+                            <div className="logo-icon">
+                                <Radio size={24} />
+                            </div>
+                            <div className="logo-text">FTTH Monitor</div>
+                        </div>
+
+                        <nav className="nav-menu">
+                            <div 
+                                className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => setActiveView('dashboard')}
+                            >
+                                <BarChart3 size={20} />
+                                Dashboard
+                            </div>
+                            <div 
+                                className={`nav-item ${activeView === 'technicians' ? 'active' : ''}`}
+                                onClick={() => setActiveView('technicians')}
+                            >
+                                <Users size={20} />
+                                Técnicos
+                            </div>
+                            <div 
+                                className={`nav-item ${activeView === 'orders' ? 'active' : ''}`}
+                                onClick={() => setActiveView('orders')}
+                            >
+                                <Activity size={20} />
+                                Ordens de Serviço
+                            </div>
+                        </nav>
+
+                        <div className="user-info">
+                            <div className="user-info-header">
+                                <div className="user-avatar">
+                                    {user?.username?.substring(0, 2).toUpperCase() || 'AD'}
+                                </div>
+                                <div className="user-details">
+                                    <div className="user-name">{user?.username || 'Admin'}</div>
+                                    <div className="user-role">{user?.role || 'Administrador'}</div>
+                                </div>
+                            </div>
+                            <button className="logout-btn" onClick={handleLogout}>
+                                <LogOut size={16} />
+                                Sair
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="main-content">
+                        <div className="header">
+                            <div>
+                                <h1 className="header-title">Dashboard de Monitoramento</h1>
+                                <p className="header-subtitle">
+                                    Última atualização: {new Date().toLocaleString('pt-BR')}
+                                </p>
+                            </div>
+                            <div className="header-actions">
+                                <button 
+                                    className="btn btn-secondary"
+                                    onClick={handleRefresh}
+                                    disabled={refreshing}
+                                >
+                                    <RefreshCw size={18} className={refreshing ? 'spinning' : ''} />
+                                    {refreshing ? 'Atualizando...' : 'Atualizar'}
+                                </button>
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={() => openModal('newOrder')}
+                                >
+                                    <Plus size={18} />
+                                    Nova OS
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Stats Cards */}
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{statsData.total}</div>
+                                        <div className="stat-label">Total de Técnicos</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(14, 165, 233, 0.15)', color: 'var(--primary)'}}>
+                                        <Users size={24} />
+                                    </div>
+                                </div>
+                                <div className="stat-change positive">
+                                    <TrendingUp size={14} />
+                                    Conectado à API
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{statsData.active}</div>
+                                        <div className="stat-label">Em Atendimento</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)'}}>
+                                        <Activity size={24} />
+                                    </div>
+                                </div>
+                                <div className="stat-change positive">
+                                    <TrendingUp size={14} />
+                                    Dados em tempo real
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{statsData.available}</div>
+                                        <div className="stat-label">Disponíveis</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)'}}>
+                                        <CheckCircle size={24} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="stat-card">
+                                <div className="stat-header">
+                                    <div>
+                                        <div className="stat-value">{statsData.orders}</div>
+                                        <div className="stat-label">OS Abertas</div>
+                                    </div>
+                                    <div className="stat-icon" style={{background: 'rgba(139, 92, 246, 0.15)', color: 'var(--secondary)'}}>
+                                        <Navigation size={24} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content Grid */}
+                        <div className="content-grid">
+                            {/* Map */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Mapa de Localização</h2>
+                                </div>
+                                <div className="map-container">
+                                    <div className="map-placeholder">
+                                        <MapPin size={64} />
+                                        <div style={{fontSize: '18px', fontWeight: 600, marginBottom: '8px'}}>
+                                            Mapa em Tempo Real
+                                        </div>
+                                        <div style={{fontSize: '14px'}}>
+                                            {technicians.length} técnicos rastreados
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Technicians */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <h2 className="card-title">Técnicos em Campo</h2>
+                                </div>
+                                
+                                <div className="filters">
+                                    <button 
+                                        className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus('all')}
+                                    >
+                                        Todos
+                                    </button>
+                                    <button 
+                                        className={`filter-btn ${filterStatus === 'available' ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus('available')}
+                                    >
+                                        Disponíveis
+                                    </button>
+                                    <button 
+                                        className={`filter-btn ${filterStatus === 'busy' ? 'active' : ''}`}
+                                        onClick={() => setFilterStatus('busy')}
+                                    >
+                                        Ocupados
+                                    </button>
+                                </div>
+
+                                <div className="tech-list">
+                                    {filteredTechs.map(tech => {
+                                        const statusInfo = getStatusInfo(tech.status);
+                                        const StatusIcon = statusInfo.icon;
+                                        
+                                        return (
+                                            <div key={tech.id} className="tech-item">
+                                                <div className="tech-avatar">{tech.avatar}</div>
+                                                <div className="tech-info">
+                                                    <div className="tech-name">{tech.name}</div>
+                                                    <div className="tech-status">
+                                                        <MapPin size={14} />
+                                                        {tech.location_name || 'Localização não disponível'}
+                                                    </div>
+                                                </div>
+                                                <div className={`status-badge ${statusInfo.class}`}>
+                                                    <span className="status-dot"></span>
+                                                    {statusInfo.label}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Service Orders */}
+                        <div className="card" style={{marginTop: '24px'}}>
+                            <div className="card-header">
+                                <h2 className="card-title">Ordens de Serviço Recentes</h2>
+                                <button 
+                                    className="btn btn-secondary" 
+                                    style={{padding: '8px 16px', fontSize: '14px'}}
+                                    onClick={() => openModal('newOrder')}
+                                >
+                                    <Plus size={16} />
+                                    Nova OS
+                                </button>
+                            </div>
+                            <div className="os-list">
+                                {serviceOrders.slice(0, 5).map(os => (
+                                    <div key={os.id} className="os-item">
+                                        <div className="os-header">
+                                            <span className="os-id">{os.order_number}</span>
+                                            <span className="os-type">{getTypeLabel(os.type)}</span>
+                                        </div>
+                                        <div className="os-info">
+                                            <MapPin size={14} style={{display: 'inline', marginRight: '6px'}} />
+                                            {os.address}
+                                        </div>
+                                        <div className="os-footer">
+                                            <div className="os-tech">
+                                                <Users size={14} />
+                                                {os.technician_name || 'Não atribuído'}
+                                            </div>
+                                            <div className="os-time">
+                                                {os.status === 'pending' ? 'Pendente' : os.status === 'in_progress' ? 'Em andamento' : 'Concluída'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Toast */}
+                    {toast && (
+                        <Toast 
+                            message={toast.message} 
+                            type={toast.type}
+                            onClose={() => setToast(null)}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <style>
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</body>
+</html>
